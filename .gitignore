@@ -1,8 +1,2 @@
 .idea
 obj
-
-AnalyzerReader
-CompilerDiagnosticsGenerator/.*
-Foo/.*
-test
-tools
