@@ -4,6 +4,7 @@ public class AuditOutput
 {
     public string Slug { get; set; } = string.Empty;
     public int Value { get; set; }
+    public string DisplayValue { get; set; }
     public float Score { get; set; }
     public AuditDetail Details { get; set; }
 }

@@ -44,36 +44,44 @@ public static class Mapper
 
     private static IEnumerable<AuditOutput> Map(IEnumerable<Diagnostic> projectDiagnostics, IEnumerable<PluginConfigAudit> audits)
     {
-        var currentDiagnostics =  projectDiagnostics
+        var currentDiagnostics = projectDiagnostics
             .GroupBy(
                 x => x.Id,
                 (id, diagnostics) =>
                 {
                     var diagnosticsList = diagnostics.ToList();
+                    var issues = diagnosticsList.Select(x => new AuditDetailIssue
+                    {
+                        Message = x.Message,
+                        Severity = Map(x.Severity),
+                        Source = new AuditDetailIssueSource
+                        {
+                            File = x.FilePath,
+                            Position = new AuditDetailIssueLocationPosition
+                            {
+                                // counts from 0
+                                StartLine = x.StartLine + 1,
+                                StartColumn = x.StartColumn + 1 ,
+                                EndLine = x.EndLine + 1,
+                                EndColumn = x.EndColumn + 1
+                            }
+                        }
+
+                    }).ToList();
+                    
                     return new AuditOutput
                     {
                         Slug = Slugify(id),
                         Value = diagnosticsList.Count,
+                        DisplayValue = string.Join(
+                            ',',
+                            issues
+                                .GroupBy(x => x.Severity)
+                                .Select(x => $"{x.Key.ToString().ToLower()} {x.Count()}")),
                         Score = 1,
                         Details = new AuditDetail
                         {
-                            Issues = diagnosticsList.Select(x => new AuditDetailIssue
-                            {
-                                Message = x.Message,
-                                Severity = Map(x.Severity),
-                                Source = new AuditDetailIssueSource
-                                {
-                                    File = x.FilePath,
-                                    Position = new AuditDetailIssueLocationPosition
-                                    {
-                                        StartLine = x.StartLine,
-                                        StartColumn = x.StartColumn,
-                                        EndLine = x.EndLine,
-                                        EndColumn = x.EndColumn
-                                    }
-                                }
-
-                            })
+                            Issues = issues
                         }
                     };
                 });
@@ -98,6 +106,7 @@ public static class Mapper
             Slug = value.Slug,
             Value = 0,
             Score = 0,
+            DisplayValue = "passed",
             Details = new AuditDetail()
         };
     }

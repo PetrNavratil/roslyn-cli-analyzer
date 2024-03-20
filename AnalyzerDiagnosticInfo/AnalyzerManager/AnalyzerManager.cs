@@ -90,6 +90,6 @@ public static class AnalyzerManager
         }
         
         Console.WriteLine("Could not load previously generated analyzers info");
-        return Array.Empty<PluginConfigAudit>();
+        throw new Exception("Could not load previously generated analyzers info");
     }
 }
