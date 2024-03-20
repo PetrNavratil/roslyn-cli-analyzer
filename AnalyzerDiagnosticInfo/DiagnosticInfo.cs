@@ -5,11 +5,11 @@ namespace AnalyzerDiagnosticInfo;
 public class DiagnosticInfo
 {
     public required string Id { get; set; }
-    public required LocalizableString Title { get; set; }
-    public required LocalizableString Description { get; set; }
+    public required string Title { get; set; }
+    public required string Description { get; set; }
     public bool EnabledByDefault { get; set; }
-    public required DiagnosticSeverity DefaultSeverity { get; set; }
-    public required ReportDiagnostic EffectiveSeverity { get; set; }
+    public DiagnosticSeverity DefaultSeverity { get; set; }
+    public ReportDiagnostic EffectiveSeverity { get; set; }
     public string Category { get; set; } = string.Empty;
     public string? LinkUrl { get; set; }
     public AnalyzerInfo? AnalyzerInfo { get; set; }

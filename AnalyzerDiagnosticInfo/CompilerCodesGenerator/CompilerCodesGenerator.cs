@@ -15,7 +15,7 @@ public class CompilerCodesGenerator
     private const string DocTableOfContentsUrl = "https://raw.githubusercontent.com/dotnet/docs/main/docs/csharp/language-reference/compiler-messages/toc.yml";
     private const string DefaultBranch = "main";
     
-    public static async Task<IReadOnlyList<ErrorCode>> GetErrorCodesAsync()
+    public static async Task<IReadOnlyList<CompilerCodeOutput>> GetErrorCodesAsync()
     {
         using var client = new HttpClient();
         var enumMembers = await GetErrorCodeEnumMembersAsync(client, DefaultBranch);
@@ -24,7 +24,7 @@ public class CompilerCodesGenerator
 
         var docBaseUri = new Uri(DocBaseUrl);
 
-        return enumMembers.Select(m => ErrorCode.Create(m, GetMessage, GetDocLink)).ToList();
+        return enumMembers.Select(m => CompilerCodeOutput.Create(m, GetMessage, GetDocLink)).ToList();
 
         Uri GetDocLink(int value) => docRelativeUris.TryGetValue(value, out var relativeUrl)
             ? new KnownGoodUri(docBaseUri, relativeUrl)
@@ -142,68 +142,4 @@ public class CompilerCodesGenerator
         {
         }
     }
-}
-
-public class ErrorCode
-{
-    public static ErrorCode Create(
-        EnumMemberDeclarationSyntax member,
-        Func<string, string> getMessageByName,
-        Func<int, Uri> getLinkByValue)
-    {
-        string name = member.Identifier.ValueText;
-        if (name == "Void" || name == "Unknown")
-        {
-            return new ErrorCode(name, 0, Severity.Unknown, "", null);
-        }
-        else
-        {
-            int value = int.Parse(member.EqualsValue?.Value.GetText().ToString() ?? "0");
-            return new ErrorCode(
-                name[4..],
-                value,
-                ParseSeverity(name.Substring(0, 3)),
-                getMessageByName(name),
-                getLinkByValue(value));
-        }
-    }
-    
-    private ErrorCode(string name, int value, Severity severity, string message, Uri link)
-    {
-        Name = name;
-        Value = value;
-        Severity = severity;
-        Message = message;
-        Link = link;
-    }
-    
-    public string Name { get; }
-    public int Value { get; }
-    public string Code => $"CS{Value:D4}";
-    public Severity Severity { get; }
-    public string Message { get; }
-    public Uri Link { get; set; }
-    
-    private static Severity ParseSeverity(string severity)
-    {
-        return severity switch
-        {
-            "HDN" => Severity.Hidden,
-            "INF" => Severity.Info,
-            "WRN" => Severity.Warning,
-            "ERR" => Severity.Error,
-            "FTL" => Severity.Fatal,
-            _ => Severity.Unknown,
-        };
-    }
-}
-            
-public enum Severity
-{
-    Unknown,
-    Hidden,
-    Info,
-    Warning,
-    Error,
-    Fatal
 }

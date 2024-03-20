@@ -1,3 +1,4 @@
+using AnalyzerDiagnosticInfo.Mappers;
 using EditorConfig.Core;
 using Microsoft.CodeAnalysis;
 
@@ -68,13 +69,6 @@ public static class EditorConfigManager
         {
             return analyzers;
         }
-        
-        // Console.WriteLine($"TU\t{configFile.AnalyzerConfigDocument.FilePath}\t{configFile.Sections.SelectMany(x => x.Keys).Count()}\t{onlyEnable}");
-
-        // foreach (var key in configFile.Sections.SelectMany(x => x.Keys))
-        // {
-        //     Console.WriteLine(key);
-        // }
 
         return analyzers.Select(x =>
         {
@@ -84,19 +78,16 @@ public static class EditorConfigManager
             var severity = configFile.Sections
                 .Select(y => RetrieveConfigLine(y, x.Id))
                 .Where(y => y != null)
-                .Select(y => SeverityMapper.Map(y.Value))
+                .Select(y => Mapper.Map(y!.Value))
                 .FirstOrDefault();
 
             
             if (severity == null) 
                 return x;
             
-            // Console.WriteLine($"{x.Id}");
-            // Console.WriteLine($"\tnew - {severity}");
             x.FinalSeverity = onlyEnable && severity == AnalyzerSeverity.None
                 ? x.FinalSeverity
                 : severity.Value;
-            // Console.WriteLine($"\tfinal - {x.FinalSeverity}");
             return x;
         });
     }

@@ -12,6 +12,10 @@ public static class DiagnosticGenerator
     {
         Console.WriteLine($"{project.Name}:\t\tGetting compilation");
         var compilation = await project.GetCompilationAsync();
+        if (compilation == null)
+        {
+            throw new Exception("Could not load project");
+        }
         Console.WriteLine($"{project.Name}:\t\tCompleted compilation");
         Console.WriteLine($"{project.Name}:\t\tRetrieving analyzers");
         var analyzers = project.AnalyzerReferences
@@ -34,6 +38,7 @@ public static class DiagnosticGenerator
                 {
                     Id = x.Id,
                     Severity = x.Severity,
+                    Message = x.GetMessage(),
                     FilePosition = x.Location.GetMappedLineSpan()
                 })
         };
@@ -44,6 +49,8 @@ public class Diagnostic
 {
     public required string Id { get; set; }
     public DiagnosticSeverity Severity { get; set; }
+
+    public string Message { get; set; } = string.Empty;
     
     [JsonIgnore]
     public required FileLinePositionSpan FilePosition { get; set; }

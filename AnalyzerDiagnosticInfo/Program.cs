@@ -1,7 +1,9 @@
 ﻿using AnalyzerDiagnosticInfo;
+using AnalyzerDiagnosticInfo.AnalyzerManager;
 using AnalyzerDiagnosticInfo.Cli;
 using AnalyzerDiagnosticInfo.CompilerCodesGenerator;
 using AnalyzerDiagnosticInfo.ConfigManager;
+using AnalyzerDiagnosticInfo.Mappers;
 using AnalyzerDiagnosticInfo.SolutionManager;
 using CommandLine;
 
@@ -31,15 +33,16 @@ async Task ProjectConfig(ProjectConfigOptions projectOptions)
 {
     var project = await SolutionManager.LoadProjectAsync(projectOptions.Path);
     var finalFormOfDiagnostic = ConfigManager.RetrieveProjectConfig(project, projectOptions.CustomCompilerOptionsFilepath);
-    var json = Converter.ConvertWithStringEnums(finalFormOfDiagnostic);
+    var json = Converter.ConvertWithStringEnums(Mapper.Map(finalFormOfDiagnostic));
     File.WriteAllText(projectOptions.OutputFilePath, json);
 }
 
 async Task ProjectDiagnostic(ProjectDiagnosticOptions projectDiagnosticOptions)
 {
     var project = await SolutionManager.LoadProjectAsync(projectDiagnosticOptions.Path);
+    var diagnosticInfo = AnalyzerManager.RetrievePreviouslyGeneratedAnalyzers(projectDiagnosticOptions.AnalyzersFilePath);
     var diagnostics = await DiagnosticGenerator.PerformDiagnostic(project, false);
-    var diagnosticsJson = Converter.ConvertWithStringEnums(diagnostics);
+    var diagnosticsJson = Converter.ConvertWithStringEnums(Mapper.Map(diagnostics, diagnosticInfo));
     File.WriteAllText(projectDiagnosticOptions.OutputFilePath, diagnosticsJson);
 }
 
@@ -51,14 +54,15 @@ async Task SolutionConfig(SolutionOptions solutionOptions)
     File.WriteAllText(solutionOptions.OutputFilePath, diagnosticsJson);
 }
 
-async Task SolutionDiagnostic(SolutionDiagnosticOptions projectOptions)
+async Task SolutionDiagnostic(SolutionDiagnosticOptions solutionOptions)
 {
-    var solution = await SolutionManager.LoadSolutionAsync(projectOptions.Path);
+    var solution = await SolutionManager.LoadSolutionAsync(solutionOptions.Path);
+    var diagnosticInfo = AnalyzerManager.RetrievePreviouslyGeneratedAnalyzers(solutionOptions.AnalyzersFilePath);
     var diagnostics = solution.Projects
         .Select(async x => await DiagnosticGenerator.PerformDiagnostic(x, false))
         .Select(x => x.Result);
-    var diagnosticsJson = Converter.ConvertWithStringEnums(diagnostics);
-    File.WriteAllText(projectOptions.OutputFilePath, diagnosticsJson);
+    var diagnosticsJson = Converter.ConvertWithStringEnums(Mapper.Map(diagnostics, diagnosticInfo));
+    File.WriteAllText(solutionOptions.OutputFilePath, diagnosticsJson);
 }
 
 async Task GenerateCompilerCodes(GenerateCompilerCodesFileOptions projectOptions)

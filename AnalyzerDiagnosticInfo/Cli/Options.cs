@@ -11,6 +11,12 @@ public abstract class BaseOptions
     public string OutputFilePath { get; set; }
 }
 
+public abstract class BaseDiagnosticOptions : BaseOptions
+{
+    [Option('a', "analyzersFile", Required = true, HelpText = "Analyzers file must be included")]
+    public string AnalyzersFilePath { get; set; }
+}
+
 [Verb("print-project-config", HelpText = "Prints project config")]
 public class ProjectConfigOptions : BaseOptions
 {
@@ -27,12 +33,12 @@ public class SolutionOptions : BaseOptions
 }
 
 [Verb("lint-project", HelpText = "Analyze project")]
-public class ProjectDiagnosticOptions : BaseOptions
+public class ProjectDiagnosticOptions : BaseDiagnosticOptions
 {
 }
 
 [Verb("lint-solution", HelpText = "Prints solution config")]
-public class SolutionDiagnosticOptions : BaseOptions
+public class SolutionDiagnosticOptions : BaseDiagnosticOptions
 {
 }
 
